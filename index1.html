@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>HawkerBridge</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f6f7fb;
+  margin: 0;
+  color: #111827;
+}
+
+/* Header */
+header {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  padding: 30px;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+/* Layout */
+.container {
+  padding: 25px;
+  max-width: 1200px;
+  margin: auto;
+}
+
+/* Filters */
+.filters {
+  background: white;
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+  margin-bottom: 25px;
+
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.filters input, .filters select {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  transition: 0.2s;
+}
+
+.filters input:focus, .filters select:focus {
+  border-color: #6366f1;
+  outline: none;
+}
+
+/* Match box */
+.match-box {
+  background: linear-gradient(135deg, #eef2ff, #f5f3ff);
+  border: 1px solid #ddd6fe;
+  padding: 18px;
+  border-radius: 18px;
+  margin-bottom: 25px;
+}
+
+/* Buttons */
+.quiz-button,
+.interest-button {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  padding: 10px 16px;
+  border-radius: 12px;
+  text-decoration: none;
+  display: inline-block;
+  margin-top: 10px;
+  font-weight: 600;
+  transition: 0.2s;
+}
+
+.quiz-button:hover,
+.interest-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(99,102,241,0.4);
+}
+
+/* Grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 22px;
+}
+
+/* Card */
+.card {
+  position: relative;
+  background: white;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.card:hover {
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 0 18px 40px rgba(0,0,0,0.12);
+}
+
+/* Image */
+.card img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+}
+
+/* Content */
+.card-content {
+  padding: 15px;
+}
+
+/* Tag */
+.tag {
+  display: inline-block;
+  background: #e0e7ff;
+  color: #4338ca;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  margin-top: 8px;
+  font-weight: 500;
+}
+
+/* Uploaded */
+.uploaded-date {
+  font-size: 11px;
+  color: #9ca3af;
+  margin-top: 6px;
+}
+
+/* NEW badge */
+.new-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: #ef4444;
+  color: white;
+  padding: 4px 8px;
+  font-size: 11px;
+  border-radius: 8px;
+  font-weight: bold;
+}
+
+/* Modal */
+.modal {
+  display: none;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+}
+
+.modal-content {
+  background: white;
+  margin: 5% auto;
+  padding: 25px;
+  border-radius: 18px;
+  width: 85%;
+  max-width: 700px;
+}
+
+.close {
+  float: right;
+  cursor: pointer;
+  font-size: 24px;
+}
+
+/* Hidden contact */
+.hidden-contact {
+  color: #6b7280;
+  font-style: italic;
+}
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>HawkerBridge</h1>
+</header>
+
+<div class="container">
+
+  <div class="filters">
+    <input id="searchInput" placeholder="Search...">
+
+    <select id="vicinityFilter"><option value="">All Areas</option></select>
+    <select id="languageFilter"><option value="">All Languages</option></select>
+    <select id="cooperationFilter"><option value="">All Opportunities</option></select>
+    <select id="cuisineFilter"><option value="">All Cuisines</option></select>
+  </div>
+
+  <div class="match-box">
+    <h3>Not sure?</h3>
+    <a class="quiz-button" href="quiz.html">Take Quiz</a>
+  </div>
+
+  <div id="data" class="grid">Loading...</div>
+
+</div>
+
+<div id="modal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal()">&times;</span>
+    <div id="modalDetails"></div>
+  </div>
+</div>
+
+<script>
+const sheetURLs = [
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTuhhfOdptB_dD6bCtEKxqSMaMMsQwKJrutpm_6_0700tBfd05o_pinEsDMoJo2_IefY8PAmXw_oZ6R/pub?gid=573141939&single=true&output=csv",
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTuhhfOdptB_dD6bCtEKxqSMaMMsQwKJrutpm_6_0700tBfd05o_pinEsDMoJo2_IefY8PAmXw_oZ6R/pub?gid=1090865305&single=true&output=csv",
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTuhhfOdptB_dD6bCtEKxqSMaMMsQwKJrutpm_6_0700tBfd05o_pinEsDMoJo2_IefY8PAmXw_oZ6R/pub?gid=346350130&single=true&output=csv",
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTuhhfOdptB_dD6bCtEKxqSMaMMsQwKJrutpm_6_0700tBfd05o_pinEsDMoJo2_IefY8PAmXw_oZ6R/pub?gid=208707379&single=true&output=csv"
+];
+
+let hawkers = [];
+let currentList = [];
+
+function parseDate(value) {
+  if (!value) return new Date(0);
+  const parts = value.split(/[\/\s:]+/);
+  return new Date(parts[2], parts[1]-1, parts[0], parts[3]||0, parts[4]||0);
+}
+
+function parseCSV(text) {
+  const rows = [];
+  let row = [];
+  let value = "";
+  let insideQuotes = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const next = text[i + 1];
+
+    if (char === '"' && insideQuotes && next === '"') {
+      value += '"';
+      i++;
+    } else if (char === '"') {
+      insideQuotes = !insideQuotes;
+    } else if (char === "," && !insideQuotes) {
+      row.push(value);
+      value = "";
+    } else if ((char === "\n" || char === "\r") && !insideQuotes) {
+      if (value || row.length) {
+        row.push(value);
+        rows.push(row);
+        row = [];
+        value = "";
+      }
+    } else {
+      value += char;
+    }
+  }
+
+  if (value || row.length) {
+    row.push(value);
+    rows.push(row);
+  }
+
+  return rows;
+}
+
+Promise.all(sheetURLs.map(url => fetch(url).then(r => r.text())))
+.then(results => {
+  results.forEach(data => {
+    const rows = parseCSV(data);
+    const headers = rows[0];
+
+    rows.slice(1).forEach(row => {
+      let r = {};
+      headers.forEach((h,i)=> r[h]=row[i]);
+
+      hawkers.push({
+       name: r["Full name"] || r["Name"] || "",
+stallName: r["Store name"] || r["Stall Name"] || "",
+cuisine: r["Cooking type"] || r["Cuisine"] || "",
+location: r["Where is the store located?"] || r["Location"] || "",
+languages: r["What languages ​​can you speak:"] || r["Languages"] || "",
+        contact: r["Contact"] || "",
+        directContact: r["Direct Contact"] || "",
+        image: r["Image"] || "",
+        timestamp: parseDate(r["Timestamp"])
+      });
+    });
+  });
+
+  hawkers.sort((a,b)=>b.timestamp - a.timestamp);
+
+  populateFilters();
+  displayHawkers(hawkers);
+});
+
+function displayHawkers(list){
+  currentList=list;
+  let html="";
+
+  list.forEach((h,i)=>{
+    const isNew = true;
+
+    html+=`
+    <div class="card" onclick="openModal(${i})">
+      ${isNew?`<div class="new-badge">NEW</div>`:""}
+      <img src="${h.image}">
+      <div class="card-content">
+        <h3>${h.stallName}</h3>
+        <p>${h.name}</p>
+        <p>${h.cuisine}</p>
+        <p>${h.location}</p>
+        <span class="tag">${h.languages}</span>
+        <p class="uploaded-date">${h.timestamp.toLocaleDateString("en-SG")}</p>
+      </div>
+    </div>`;
+  });
+
+  document.getElementById("data").innerHTML=html;
+}
+
+function openModal(i){
+  const h=currentList[i];
+
+  const direct=(h.directContact||"").toLowerCase();
+
+  const allowed=direct.includes("yes")||direct.includes("ya")||direct.includes("要")||direct.includes("ஆம்");
+
+  const contactBlock=allowed
+  ? `<p>${h.contact}</p>`
+  : `<a class="interest-button"
+       href="https://docs.google.com/forms/d/e/1FAIpQLSepecQxEnAd-q-0KxFCv8OKKCCtmUSd_A6DalftjvKqO5tMVg/viewform?entry.882535211=${encodeURIComponent(h.name)}"
+       target="_blank">
+       I'm interested
+     </a>`;
+
+  document.getElementById("modalDetails").innerHTML=`
+    <h2>${h.stallName}</h2>
+    <p>${h.name}</p>
+    <p>${h.cuisine}</p>
+    <p>${h.location}</p>
+    ${contactBlock}
+  `;
+
+  document.getElementById("modal").style.display="block";
+}
+
+function closeModal(){
+  document.getElementById("modal").style.display="none";
+}
+
+function populateFilters(){
+  ["North","South","East","West","Central"].forEach(v=>{
+    vicinityFilter.innerHTML+=`<option>${v}</option>`;
+  });
+}
+
+document.getElementById("searchInput").addEventListener("input",()=>{
+  const s=searchInput.value.toLowerCase();
+  displayHawkers(hawkers.filter(h=>h.name.toLowerCase().includes(s)||h.stallName.toLowerCase().includes(s)));
+});
+</script>
+
+</body>
+</html>
